@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 7;
+plan 8;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -47,5 +47,29 @@ is-deeply
     vrurg => '<color purple> vrurg </color>'
   )),
   'did the explicit mapping go ok';
+
+$sc := String::Color.new:
+  generator => -> str $string { "foo" },
+  colors => {
+    jnthn => 'blue',
+    liz   => 'red',
+    nine  => 'orange',
+    nwc10 => 'yellow',
+    timo  => 'green',
+    vrurg => 'purple'
+  }
+
+is-deeply
+  $sc.Map,
+  Map.new((
+    ""    => "",
+    jnthn => 'blue',
+    liz   => 'red',
+    nine  => 'orange',
+    nwc10 => 'yellow',
+    timo  => 'green',
+    vrurg => 'purple'
+  )),
+  'did the mapping go ok';
 
 # vim: expandtab shiftwidth=4
