@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/lizmat/String-Color/workflows/test/badge.svg)](https://github.com/lizmat/String-Color/actions)
+
 NAME
 ====
 
@@ -75,6 +77,25 @@ $sc.add(@strings, matcher => -> $string, $next {
 
 The `add` instance method allows adding of strings to the color mapping. It takes a list of strings as the positional argument. It also accepts an optional `matcher` argument. This argument should be a `Callable` that accepts two arguments: the string that hasn't been found yet, and another string that is alphabetically just after the string that hasn't been found. It is expected to return `True` if color of "next" string should be used for the given string, or `False` if a new color should be generated for the string.
 
+elems
+-----
+
+```raku
+say "$sc.elems() mappings so far";
+```
+
+The `elems` instance method returns the number of mappings.
+
+keys
+----
+
+```raku
+say "strings mapped:";
+.say for $sc.keys;
+```
+
+The `keys` instance method returns the strings in alphabetical order.
+
 known
 -----
 
@@ -92,9 +113,25 @@ Map
 my %color := $sc.Map;             # create simple Associative interface
 
 $file.IO.spurt: to-json $sc.Map;  # make mapping persistent
+
+my %mapped := $sc.Map: -> string, $color {
+    "<span style=\"$color\">$string</span>"
+}
 ```
 
 The `Map` instance method returns the state of the mapping as a `Map` object, which can be bound to create an `Associative` interface. Or it can be used to create a persistent version of the mapping.
+
+It can also take an optional `Callable` parameter to indicate mapping logic that should be applied: this `Callable` will be called with two positional arguments: the string, and the associated color. It should return should be associated with the string.
+
+values
+------
+
+```raku
+say "colors assigned:";
+.say for $sc.values;
+```
+
+The `values` instance method returns the colors in the same order as `keys`.
 
 AUTHOR
 ======
