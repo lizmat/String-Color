@@ -8,6 +8,7 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
     has str  @!color                = '';
     has Lock $!lock is built(:bind) = Lock.new;
 
+    multi method TWEAK(--> Nil) { }
     multi method TWEAK(:%colors! --> Nil) {
         for %colors.kv -> str $string, str $color {
             without finds @!seen, $string -> $pos {
@@ -50,7 +51,8 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
         $color (elem) @!color
     }
 
-    method Map(String::Color:D: &mapper) {
+    proto method Map(|) {*}
+    multi method Map(String::Color:D: &mapper) {
         $!lock.protect: {
             Map.new(( (^@!seen).map: -> int $pos {
                 if @!color[$pos] -> $color {
@@ -62,6 +64,17 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
             }))
         }
     }
+    multi method Map(String::Color:D:) {
+        $!lock.protect: {
+            Map.new(( (^@!seen).map: -> int $pos {
+                @!seen[$pos] => @!color[$pos]
+            }))
+        }
+    }
+
+    method elems(String::Color:D:)  { @!seen.elems }
+    method keys(String::Color:D:)   { @!seen       }
+    method values(String::Color:D:) { @!color      }
 }
 
 =begin pod
@@ -161,6 +174,27 @@ been found.  It is expected to return C<True> if color of "next" string
 should be used for the given string, or C<False> if a new color should
 be generated for the string.
 
+=head2 elems
+
+=begin code :lang<raku>
+
+say "$sc.elems() mappings so far";
+
+=end code
+
+The C<elems> instance method returns the number of mappings.
+
+=head2 keys
+
+=begin code :lang<raku>
+
+say "strings mapped:";
+.say for $sc.keys;
+
+=end code
+
+The C<keys> instance method returns the strings in alphabetical order.
+
 =head2 known
 
 =begin code :lang<raku>
@@ -181,11 +215,31 @@ my %color := $sc.Map;             # create simple Associative interface
 
 $file.IO.spurt: to-json $sc.Map;  # make mapping persistent
 
+my %mapped := $sc.Map: -> string, $color {
+    "<span style=\"$color\">$string</span>"
+}
+
 =end code
 
 The C<Map> instance method returns the state of the mapping as a C<Map> object,
 which can be bound to create an C<Associative> interface.  Or it can be used
 to create a persistent version of the mapping.
+
+It can also take an optional C<Callable> parameter to indicate mapping logic
+that should be applied: this C<Callable> will be called with two positional
+arguments: the string, and the associated color.  It should return should be
+associated with the string.
+
+=head2 values
+
+=begin code :lang<raku>
+
+say "colors assigned:";
+.say for $sc.values;
+
+=end code
+
+The C<values> instance method returns the colors in the same order as C<keys>.
 
 =head1 AUTHOR
 

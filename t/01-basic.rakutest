@@ -1,8 +1,51 @@
 use Test;
 use String::Color;
 
-pass "replace me";
+plan 7;
 
-done-testing;
+my str @colors = <green blue orange yellow purple>;
+
+my $sc := String::Color.new:
+  generator => -> str $string {
+      $string eq "liz"
+        ?? "red"
+        !! @colors.shift;
+  }
+
+isa-ok $sc, String::Color;
+$sc.add: <liz timo jnthn nine nwc10 vrurg>;
+
+ok $sc.known("red");
+is $sc.elems, 7, 'is number of elements ok';
+is-deeply [$sc.keys],   ["", |<jnthn liz nine nwc10 timo vrurg>],
+  'are the keys ok';
+is-deeply [$sc.values], ["", |<blue red orange yellow green purple>],
+  'are the values ok';
+
+is-deeply
+  $sc.Map,
+  Map.new((
+    ""    => "",
+    jnthn => 'blue',
+    liz   => 'red',
+    nine  => 'orange',
+    nwc10 => 'yellow',
+    timo  => 'green',
+    vrurg => 'purple'
+  )),
+  'did the mapping go ok';
+
+is-deeply
+  $sc.Map(-> $s, $c { "<color $c> $s </color>" }),
+  Map.new((
+    ""    => "",
+    jnthn => '<color blue> jnthn </color>',
+    liz   => '<color red> liz </color>',
+    nine  => '<color orange> nine </color>',
+    nwc10 => '<color yellow> nwc10 </color>',
+    timo  => '<color green> timo </color>',
+    vrurg => '<color purple> vrurg </color>'
+  )),
+  'did the explicit mapping go ok';
 
 # vim: expandtab shiftwidth=4
