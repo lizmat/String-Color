@@ -1,0 +1,26 @@
+{
+  "auth": "cpan:ELIZABETH",
+  "authors": [
+    "Elizabeth Mattijsen"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+    "Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>"
+  ],
+  "description": "map strings to a color code",
+  "license": "Artistic-2.0",
+  "name": "String::Color",
+  "perl": "6.d",
+  "provides": {
+    "String::Color": "lib/String/Color.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}
