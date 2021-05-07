@@ -1,17 +1,15 @@
 use v6.*;
 
 use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
+use OO::Monitors;
 
-class String::Color:ver<0.0.2>:auth<cpan:ELIZABETH> {
+monitor String::Color:ver<0.0.3>:auth<cpan:ELIZABETH> {
     has      &.generator is required;
     has str  @!seen                 = '';
     has str  @!color                = '';
-    has Lock $!lock is built(:bind) = Lock.new;
 
     multi method TWEAK(--> Nil) { }
     multi method TWEAK(:%colors! --> Nil) {
-        # Only the thread doing the .new has access here,
-        # so no locks needed here.
         for %colors.kv -> str $string, str $color {
             without finds @!seen, $string -> $pos {
                 inserts
@@ -24,61 +22,62 @@ class String::Color:ver<0.0.2>:auth<cpan:ELIZABETH> {
 
     proto method add(|) {*}
     multi method add(String::Color:D: @strings, :&matcher!) {
-        $!lock.protect: {
-            my str @inserted;
-            for @strings -> str $string {
-                without finds @!seen, $string -> $pos {
-                    inserts
-                      @!seen,  $string,
-                      @!color, matcher($string, @!seen[$pos])
-                        ?? @!color[$pos]
-                        !! &!generator($string),
-                        :$pos;
-                    @inserted.push($string);
-                }
+        my str @inserted;
+        for @strings -> str $string {
+            without finds @!seen, $string -> $pos {
+                inserts
+                  @!seen,  $string,
+                  @!color, matcher($string, @!seen[$pos])
+                    ?? @!color[$pos]
+                    !! &!generator($string),
+                    :$pos;
+                @inserted.push($string);
             }
-            @inserted
         }
+        @inserted
     }
     multi method add(String::Color:D: @strings) {
-        $!lock.protect: {
-            my str @inserted;
-            for @strings -> str $string {
-                without finds @!seen, $string -> $pos {
-                    inserts
-                      @!seen,  $string,
-                      @!color, &!generator($string),
-                      :$pos;
-                    @inserted.push($string);
-                }
+        my str @inserted;
+        for @strings -> str $string {
+            without finds @!seen, $string -> $pos {
+                inserts
+                  @!seen,  $string,
+                  @!color, &!generator($string),
+                  :$pos;
+                @inserted.push($string);
             }
-            @inserted
         }
+        @inserted
     }
 
     method known(String::Color:D: Str:D $color --> Bool:D) {
-        $!lock.protect: { $color (elem) @!color }
+        $color (elem) @!color
+    }
+
+    method color(String::Color:D: Str:D $nick) {
+        with finds @!seen, $nick -> $pos {
+            @!color[$pos]
+        }
+        else {
+            Nil
+        }
     }
 
     proto method Map(|) {*}
     multi method Map(String::Color:D: &mapper --> Map:D) {
-        $!lock.protect: {
-            Map.new(( (^@!seen).map: -> int $pos {
-                if @!color[$pos] -> $color {
-                    $_ => mapper($_, $color) given @!seen[$pos]
-                }
-                else {
-                    '' => ''
-                }
-            }))
-        }
+        Map.new(( (^@!seen).map: -> int $pos {
+            if @!color[$pos] -> $color {
+                $_ => mapper($_, $color) given @!seen[$pos]
+            }
+            else {
+                '' => ''
+            }
+        }))
     }
     multi method Map(String::Color:D: --> Map:D) {
-        $!lock.protect: {
-            Map.new(( (^@!seen).map: -> int $pos {
-                @!seen[$pos] => @!color[$pos]
-            }))
-        }
+        Map.new(( (^@!seen).map: -> int $pos {
+            @!seen[$pos] => @!color[$pos]
+        }))
     }
 
     method elems( String::Color:D:) { @!seen.elems }
