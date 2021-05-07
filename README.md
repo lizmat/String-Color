@@ -17,7 +17,7 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-$sc.add(@nicks);                # add mapping for strings in @nicks
+my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
 
 my %color := $sc.Map;           # set up hash with color mappings so far
 
@@ -33,6 +33,8 @@ String::Color provides a class and logic to map strings to a (random) color code
 Note that colors are described as strings. In whichever format you would like. Technically, this module could be used to match strings to other strings that would not necessarily correspond to colors. But that's entirely up to the fantasy of the user of this module.
 
 Also note that by e.g. writing out the `Map` of a `Color::String` object as e.g. **JSON** to disk, and then later use that in the `color` argument to `new`, would effectively make the mapping persistent.
+
+Finally, even though this just looks like a normal hash, it is different in two ways: the keys are always returned in alphabetical order, and all operations are thread safe (although results may be out of date).
 
 CLASS METHODS
 =============
@@ -68,14 +70,18 @@ add
 ---
 
 ```raku
-$sc.add(@strings);
+my @added = $sc.add(@strings);
 
 $sc.add(@strings, matcher => -> $string, $next {
     ...
 }
 ```
 
-The `add` instance method allows adding of strings to the color mapping. It takes a list of strings as the positional argument. It also accepts an optional `matcher` argument. This argument should be a `Callable` that accepts two arguments: the string that hasn't been found yet, and another string that is alphabetically just after the string that hasn't been found. It is expected to return `True` if color of "next" string should be used for the given string, or `False` if a new color should be generated for the string.
+The `add` instance method allows adding of strings to the color mapping. It takes a list of strings as the positional argument.
+
+It also accepts an optional `matcher` argument. This argument should be a `Callable` that accepts two arguments: the string that hasn't been found yet, and another string that is alphabetically just after the string that hasn't been found. It is expected to return `True` if color of "next" string should be used for the given string, or `False` if a new color should be generated for the string.
+
+It returns an array of strings that were actually added.
 
 elems
 -----

@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 8;
+plan 11;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -15,7 +15,8 @@ my $sc := String::Color.new:
 isa-ok $sc, String::Color;
 $sc.add: <liz timo jnthn nine nwc10 vrurg>;
 
-ok $sc.known("red");
+ok $sc.known("red"), "is 'red' a known color";
+nok $sc.known("cyan"), "is 'cyan' a NOT known color";
 is $sc.elems, 7, 'is number of elements ok';
 is-deeply [$sc.keys],   ["", |<jnthn liz nine nwc10 timo vrurg>],
   'are the keys ok';
@@ -71,5 +72,23 @@ is-deeply
     vrurg => 'purple'
   )),
   'did the mapping go ok';
+
+is-deeply [$sc.add( <moritz masak nine> )], [<moritz masak>],
+  'does add return the ones really added';
+
+is-deeply
+  $sc.Map,
+  Map.new((
+    ""     => "",
+    jnthn  => 'blue',
+    liz    => 'red',
+    masak  => 'foo',
+    moritz => 'foo',
+    nine   => 'orange',
+    nwc10  => 'yellow',
+    timo   => 'green',
+    vrurg  => 'purple'
+  )),
+  'did the mapping go ok again';
 
 # vim: expandtab shiftwidth=4

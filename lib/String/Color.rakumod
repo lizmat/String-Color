@@ -2,7 +2,7 @@ use v6.*;
 
 use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
 
-class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
+class String::Color:ver<0.0.2>:auth<cpan:ELIZABETH> {
     has      &.generator is required;
     has str  @!seen                 = '';
     has str  @!color                = '';
@@ -10,6 +10,8 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
 
     multi method TWEAK(--> Nil) { }
     multi method TWEAK(:%colors! --> Nil) {
+        # Only the thread doing the .new has access here,
+        # so no locks needed here.
         for %colors.kv -> str $string, str $color {
             without finds @!seen, $string -> $pos {
                 inserts
@@ -20,8 +22,10 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
         }
     }
 
-    multi method add(@strings, :&matcher! --> Nil) {
+    proto method add(|) {*}
+    multi method add(String::Color:D: @strings, :&matcher!) {
         $!lock.protect: {
+            my str @inserted;
             for @strings -> str $string {
                 without finds @!seen, $string -> $pos {
                     inserts
@@ -30,29 +34,34 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
                         ?? @!color[$pos]
                         !! &!generator($string),
                         :$pos;
+                    @inserted.push($string);
                 }
             }
+            @inserted
         }
     }
-    multi method add(@strings --> Nil) {
+    multi method add(String::Color:D: @strings) {
         $!lock.protect: {
+            my str @inserted;
             for @strings -> str $string {
                 without finds @!seen, $string -> $pos {
                     inserts
                       @!seen,  $string,
                       @!color, &!generator($string),
                       :$pos;
+                    @inserted.push($string);
                 }
             }
+            @inserted
         }
     }
 
     method known(String::Color:D: Str:D $color --> Bool:D) {
-        $color (elem) @!color
+        $!lock.protect: { $color (elem) @!color }
     }
 
     proto method Map(|) {*}
-    multi method Map(String::Color:D: &mapper) {
+    multi method Map(String::Color:D: &mapper --> Map:D) {
         $!lock.protect: {
             Map.new(( (^@!seen).map: -> int $pos {
                 if @!color[$pos] -> $color {
@@ -64,7 +73,7 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
             }))
         }
     }
-    multi method Map(String::Color:D:) {
+    multi method Map(String::Color:D: --> Map:D) {
         $!lock.protect: {
             Map.new(( (^@!seen).map: -> int $pos {
                 @!seen[$pos] => @!color[$pos]
@@ -72,8 +81,8 @@ class String::Color:ver<0.0.1>:auth<cpan:ELIZABETH> {
         }
     }
 
-    method elems(String::Color:D:)  { @!seen.elems }
-    method keys(String::Color:D:)   { @!seen       }
+    method elems( String::Color:D:) { @!seen.elems }
+    method keys(  String::Color:D:) { @!seen       }
     method values(String::Color:D:) { @!color      }
 }
 
@@ -95,7 +104,7 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-$sc.add(@nicks);                # add mapping for strings in @nicks
+my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
 
 my %color := $sc.Map;           # set up hash with color mappings so far
 
@@ -120,6 +129,10 @@ entirely up to the fantasy of the user of this module.
 Also note that by e.g. writing out the C<Map> of a C<Color::String> object
 as e.g. B<JSON> to disk, and then later use that in the C<color> argument
 to C<new>, would effectively make the mapping persistent.
+
+Finally, even though this just looks like a normal hash, it is different in
+two ways: the keys are always returned in alphabetical order, and all
+operations are thread safe (although results may be out of date).
 
 =head1 CLASS METHODS
 
@@ -157,7 +170,7 @@ colors that have been assigned to strings so far.
 
 =begin code :lang<raku>
 
-$sc.add(@strings);
+my @added = $sc.add(@strings);
 
 $sc.add(@strings, matcher => -> $string, $next {
     ...
@@ -166,13 +179,16 @@ $sc.add(@strings, matcher => -> $string, $next {
 =end code
 
 The C<add> instance method allows adding of strings to the color mapping.
-It takes a list of strings as the positional argument.  It also accepts
-an optional C<matcher> argument.  This argument should be a C<Callable>
-that accepts two arguments: the string that hasn't been found yet, and
-another string that is alphabetically just after the string that hasn't
-been found.  It is expected to return C<True> if color of "next" string
-should be used for the given string, or C<False> if a new color should
+It takes a list of strings as the positional argument.
+
+It also accepts an optional C<matcher> argument.  This argument should be
+a C<Callable> that accepts two arguments: the string that hasn't been found
+yet, and another string that is alphabetically just after the string that
+hasn't been found.  It is expected to return C<True> if color of "next"
+string should be used for the given string, or C<False> if a new color should
 be generated for the string.
+
+It returns an array of strings that were actually added.
 
 =head2 elems
 

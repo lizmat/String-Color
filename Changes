@@ -2,5 +2,9 @@ Revision history for String-Color
 
 {{$NEXT}}
 
+0.0.2  2021-05-07T12:36:07+02:00
+    - Make .add return the strings that were actually added
+    - Make .known thread safe
+
 0.0.1  2021-05-06T21:45:51+02:00
     - Initial version
