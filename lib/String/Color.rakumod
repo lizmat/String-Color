@@ -3,7 +3,7 @@ use v6.*;
 use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
 use OO::Monitors;
 
-monitor String::Color:ver<0.0.3>:auth<cpan:ELIZABETH> {
+monitor String::Color:ver<0.0.4>:auth<cpan:ELIZABETH> {
     has      &.generator is required;
     has str  @!seen                 = '';
     has str  @!color                = '';
@@ -12,39 +12,33 @@ monitor String::Color:ver<0.0.3>:auth<cpan:ELIZABETH> {
     multi method TWEAK(:%colors! --> Nil) {
         for %colors.kv -> str $string, str $color {
             without finds @!seen, $string -> $pos {
-                inserts
-                  @!seen,  $string,
-                  @!color, $color,
-                  :$pos;
+                inserts @!seen,  $string, @!color, $color, :$pos;
             }
         }
     }
 
     proto method add(|) {*}
     multi method add(String::Color:D: @strings, :&matcher!) {
-        my str @inserted;
+        my @inserted;
         for @strings -> str $string {
             without finds @!seen, $string -> $pos {
-                inserts
-                  @!seen,  $string,
-                  @!color, matcher($string, @!seen[$pos])
-                    ?? @!color[$pos]
-                    !! &!generator($string),
-                    :$pos;
-                @inserted.push($string);
+                my $color := matcher($string, @!seen[$pos])
+                  ?? @!color[$pos]
+                  !! &!generator($string);
+
+                inserts @!seen,  $string, @!color, $color, :$pos;
+                @inserted.push: $string => $color;
             }
         }
         @inserted
     }
     multi method add(String::Color:D: @strings) {
-        my str @inserted;
+        my @inserted;
         for @strings -> str $string {
             without finds @!seen, $string -> $pos {
-                inserts
-                  @!seen,  $string,
-                  @!color, &!generator($string),
-                  :$pos;
-                @inserted.push($string);
+                my $color := &!generator($string);
+                inserts @!seen,  $string, @!color, $color, :$pos;
+                @inserted.push: $string => $color;
             }
         }
         @inserted
@@ -171,7 +165,7 @@ colors that have been assigned to strings so far.
 
 my @added = $sc.add(@strings);
 
-$sc.add(@strings, matcher => -> $string, $next {
+$sc.add: @strings, matcher => -> $string, $next {
     ...
 }
 
@@ -187,7 +181,8 @@ hasn't been found.  It is expected to return C<True> if color of "next"
 string should be used for the given string, or C<False> if a new color should
 be generated for the string.
 
-It returns an array of strings that were actually added.
+It returns an array of C<Pair>s (where the key is the string, and the value
+is the color) that were actually added.
 
 =head2 elems
 

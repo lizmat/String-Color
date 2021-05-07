@@ -73,7 +73,7 @@ is-deeply
   )),
   'did the mapping go ok';
 
-is-deeply [$sc.add( <moritz masak nine> )], [<moritz masak>],
+is-deeply [$sc.add( <moritz masak nine> )], [moritz => "foo", masak => "foo"],
   'does add return the ones really added';
 
 is-deeply

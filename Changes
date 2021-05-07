@@ -2,6 +2,9 @@ Revision history for String-Color
 
 {{$NEXT}}
 
+0.0.4  2021-05-07T15:30:49+02:00
+    - Make .add return string => color pairs
+
 0.0.3  2021-05-07T14:56:50+02:00
     - Switch to using OO::Monitors, remove all local locks
 

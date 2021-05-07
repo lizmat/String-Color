@@ -72,7 +72,7 @@ add
 ```raku
 my @added = $sc.add(@strings);
 
-$sc.add(@strings, matcher => -> $string, $next {
+$sc.add: @strings, matcher => -> $string, $next {
     ...
 }
 ```
@@ -81,7 +81,7 @@ The `add` instance method allows adding of strings to the color mapping. It take
 
 It also accepts an optional `matcher` argument. This argument should be a `Callable` that accepts two arguments: the string that hasn't been found yet, and another string that is alphabetically just after the string that hasn't been found. It is expected to return `True` if color of "next" string should be used for the given string, or `False` if a new color should be generated for the string.
 
-It returns an array of strings that were actually added.
+It returns an array of `Pair`s (where the key is the string, and the value is the color) that were actually added.
 
 elems
 -----
