@@ -7,7 +7,7 @@
   ],
   "depends": [
     "Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>",
-    "OO::Monitors:ver<1.1.1>:<auth<cpan::JNTHN"
+    "OO::Monitors"
   ],
   "description": "map strings to a color code",
   "license": "Artistic-2.0",
