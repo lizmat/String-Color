@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 11;
+plan 12;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -18,10 +18,12 @@ $sc.add: <liz timo jnthn nine nwc10 vrurg>;
 ok $sc.known("red"), "is 'red' a known color";
 nok $sc.known("cyan"), "is 'cyan' a NOT known color";
 is $sc.elems, 7, 'is number of elements ok';
-is-deeply [$sc.keys],   ["", |<jnthn liz nine nwc10 timo vrurg>],
-  'are the keys ok';
-is-deeply [$sc.values], ["", |<blue red orange yellow green purple>],
-  'are the values ok';
+is-deeply [$sc.strings],   ["", |<jnthn liz nine nwc10 timo vrurg>],
+  'are the strings ok';
+is-deeply [$sc.colors], ["", |<blue red orange yellow green purple>],
+  'are the colors ok';
+is-deeply [$sc.cleaned],   ["", |<jnthn liz nine nwc timo vrurg>],
+  'are the cleaned strings ok';
 
 is-deeply
   $sc.Map,

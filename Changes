@@ -2,6 +2,14 @@ Revision history for String-Color
 
 {{$NEXT}}
 
+0.0.5  2021-05-08T15:00:29+02:00
+    - Simplify interface, make the module based on cleaned strings
+    - Remove .keys|values methods, should no longer be considered Associative
+    - Add .strings|colors|cleaned methods
+    - Add "cleaner" optional named argument to "new"
+    - Remove "matcher" functionality from "add": its function has been
+      basically superseded by the "cleaner" functionality
+
 0.0.4  2021-05-07T15:30:49+02:00
     - Make .add return string => color pairs
 
