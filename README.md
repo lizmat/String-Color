@@ -18,9 +18,9 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
+$sc.add(@nicks);                # add mapping for strings in @nicks
 
-my %colors := $sc.Map;          # set up hash with color mappings so far
+my %colors := $sc.Map;          # set up Map with color mappings so far
 
 say "$color is already used"
   if $sc.known($color);        # check if a color is used already
@@ -41,7 +41,7 @@ Note that colors are described as strings. In whichever format you would like. T
 
 Also note that by e.g. writing out the `Map` of a `String::Color` object as e.g. **JSON** to disk, and then later use that in the `colors` argument to `new`, would effectively make the mapping persistent.
 
-Finally, even though this may look like a normal hash, it is different in two ways: the keys (the `strings` method) are always returned in alphabetical order, and all operations are thread safe (although results may be out of date).
+Finally, even though this may look like a normal hash, but all operations are thread safe (although results may be out of date).
 
 CLASS METHODS
 =============
@@ -82,12 +82,10 @@ add
 ---
 
 ```raku
-my @added = $sc.add(@strings);
+$sc.add(@strings);
 ```
 
 The `add` instance method allows adding of strings to the colors mapping. It takes a list of strings as the positional argument.
-
-It returns an array of `Pair`s (where the key is the string, and the value is the color) that were actually added.
 
 cleaned
 -------
@@ -132,17 +130,9 @@ Map
 
 ```raku
 my %colors := $sc.Map;            # create simple Associative interface
-
-$file.IO.spurt: to-json $sc.Map;  # make mapping persistent
-
-my %mapped := $sc.Map: -> $string, $color {
-    "<span style=\"$color\">$string</span>"
-}
 ```
 
 The `Map` instance method returns the state of the mapping as a `Map` object, which can be bound to create an `Associative` interface. Or it can be used to create a persistent version of the mapping.
-
-It can also take an optional `Callable` parameter to indicate mapping logic that should be applied: this `Callable` will be called with two positional arguments: the string, and the associated color. It should return a `Str` that should be associated with the string.
 
 strings
 -------
@@ -152,7 +142,7 @@ say "strings mapped:";
 .say for $sc.strings;
 ```
 
-The `strings` instance method returns the strings in alphabetical order.
+The `strings` instance method returns the strings.
 
 AUTHOR
 ======

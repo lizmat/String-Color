@@ -1,6 +1,5 @@
 use v6.*;
 
-use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
 use OO::Monitors;
 
 # Default string cleaner logic.
@@ -15,85 +14,58 @@ sub clean(Str:D $string) {
     }).join
 }
 
-monitor String::Color:ver<0.0.5>:auth<cpan:ELIZABETH> {
-    has      &.generator        is required;
-    has      &.cleaner is built(:bind) = &clean;
-    has str  @.strings is built(False) = '';
-    has str  @.colors  is built(False) = '';
-    has str  @.cleaned is built(False) = '';
+monitor String::Color:ver<0.0.6>:auth<cpan:ELIZABETH> {
+    has &.generator is required;
+    has &.cleaner is built(:bind) = &clean;
+    has %!string2color;
+    has %!clean2color;
 
-    multi method TWEAK(--> Nil) { }
+    multi method TWEAK(--> Nil) {
+        %!string2color{""} := %!clean2color{""} := "";
+    }
     multi method TWEAK(:%colors! --> Nil) {
-        for %colors.kv -> str $string, str $color {
-            without finds @!strings, $string -> $pos {
-                inserts @!strings, $string,
-                        @!colors,  $color,
-                        @!cleaned, &!cleaner($string),
-                        :$pos;
-            }
+        %!string2color := %colors;
+        %!string2color{""} := %!clean2color{""} := "";
+        for %colors.kv -> $string, $color {
+            %!clean2color{&!cleaner($string)} := $color;
         }
     }
 
     # Return the color for a cleaned string.  If there is
     # no color yet, create one with the generator.
-    method !color-for-cleaned(str $cleaned) {
-        with @!cleaned.first($cleaned, :k) -> int $pos {
-            @!colors[$pos]
-        }
-        else {
-            &!generator($cleaned)
-        }
+    method !color-for-cleaned(Str:D $cleaned) {
+        %!clean2color{$cleaned} // &!generator($cleaned)
     }
 
     # Add the given strings if they're not known yet
-    method add(String::Color:D: @strings) {
-        my @inserted;
-        for @strings -> str $string {
-            without finds @!strings, $string -> $pos {
+    method add(String::Color:D: @strings --> Nil) {
+        for @strings -> $string {
+            without %!string2color{$string} {
                 my $cleaned := &!cleaner($string);
-                my $color   := self!color-for-cleaned($cleaned);
-                inserts
-                  @!strings, $string,
-                  @!colors,  $color,
-                  @!cleaned, $cleaned,
-                  :$pos;
-                @inserted.push: $string => $color;
+                %!string2color{$string} :=
+                  %!clean2color{$cleaned} :=
+                    self!color-for-cleaned($cleaned);
             }
         }
-        @inserted
     }
 
     method known(String::Color:D: Str:D $color --> Bool:D) {
-        $color (elem) @!colors
+        $color (elem) %!string2color.values
     }
 
     method color(String::Color:D: Str:D $string) {
-        with finds @!strings, $string -> $pos {
-            @!colors[$pos]
-        }
-        else {
-            Nil
-        }
+        %!string2color{$string} // Nil
     }
 
-    proto method Map(|) {*}
-    multi method Map(String::Color:D: &mapper --> Map:D) {
-        Map.new(( (^@!strings).map: -> int $pos {
-            if @!colors[$pos] -> $color {
-                $_ => mapper($_, $color) given @!strings[$pos]
-            }
-            else {
-                @!strings[$pos] => ''
-            }
-        }))
-    }
-    multi method Map(String::Color:D: --> Map:D) {
-        Map.new(( (^@!strings).map: -> int $pos {
-            @!strings[$pos] => @!colors[$pos]
-        }))
+    method Map(String::Color:D: --> Map:D) {
+        %!string2color.Map
     }
 
-    method elems( String::Color:D:) { @!strings.elems }
+    method elems(String::Color:D:) { %!string2color.elems }
+
+    method strings(String::Color:D:) { %!string2color.keys   }
+    method colors( String::Color:D:) { %!string2color.values }
+    method cleaned(String::Color:D:) { %!clean2color.keys    }
 }
 
 =begin pod
@@ -115,9 +87,9 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
+$sc.add(@nicks);                # add mapping for strings in @nicks
 
-my %colors := $sc.Map;          # set up hash with color mappings so far
+my %colors := $sc.Map;          # set up Map with color mappings so far
 
 say "$color is already used"
   if $sc.known($color);        # check if a color is used already
@@ -153,10 +125,8 @@ Also note that by e.g. writing out the C<Map> of a C<String::Color> object
 as e.g. B<JSON> to disk, and then later use that in the C<colors> argument
 to C<new>, would effectively make the mapping persistent.
 
-Finally, even though this may look like a normal hash, it is different in
-two ways: the keys (the C<strings> method) are always returned in
-alphabetical order, and all operations are thread safe (although results
-may be out of date).
+Finally, even though this may look like a normal hash, but all operations
+are thread safe (although results may be out of date).
 
 =head1 CLASS METHODS
 
@@ -203,15 +173,12 @@ C<Callable>).  It B<must> be specified.
 
 =begin code :lang<raku>
 
-my @added = $sc.add(@strings);
+$sc.add(@strings);
 
 =end code
 
 The C<add> instance method allows adding of strings to the colors mapping.
 It takes a list of strings as the positional argument.
-
-It returns an array of C<Pair>s (where the key is the string, and the value
-is the color) that were actually added.
 
 =head2 cleaned
 
@@ -233,7 +200,8 @@ say "colors assigned:";
 
 =end code
 
-The C<colors> instance method returns the colors in the same order as C<strings>.
+The C<colors> instance method returns the colors in the same order as
+C<strings>.
 
 =head2 elems
 
@@ -263,22 +231,11 @@ whether that color is already in use or not.
 
 my %colors := $sc.Map;            # create simple Associative interface
 
-$file.IO.spurt: to-json $sc.Map;  # make mapping persistent
-
-my %mapped := $sc.Map: -> $string, $color {
-    "<span style=\"$color\">$string</span>"
-}
-
 =end code
 
 The C<Map> instance method returns the state of the mapping as a C<Map> object,
 which can be bound to create an C<Associative> interface.  Or it can be used
 to create a persistent version of the mapping.
-
-It can also take an optional C<Callable> parameter to indicate mapping logic
-that should be applied: this C<Callable> will be called with two positional
-arguments: the string, and the associated color.  It should return a C<Str>
-that should be associated with the string.
 
 =head2 strings
 
@@ -289,7 +246,7 @@ say "strings mapped:";
 
 =end code
 
-The C<strings> instance method returns the strings in alphabetical order.
+The C<strings> instance method returns the strings.
 
 =head1 AUTHOR
 

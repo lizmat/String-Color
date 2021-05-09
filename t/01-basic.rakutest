@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 12;
+plan 7;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -18,12 +18,6 @@ $sc.add: <liz timo jnthn nine nwc10 vrurg>;
 ok $sc.known("red"), "is 'red' a known color";
 nok $sc.known("cyan"), "is 'cyan' a NOT known color";
 is $sc.elems, 7, 'is number of elements ok';
-is-deeply [$sc.strings],   ["", |<jnthn liz nine nwc10 timo vrurg>],
-  'are the strings ok';
-is-deeply [$sc.colors], ["", |<blue red orange yellow green purple>],
-  'are the colors ok';
-is-deeply [$sc.cleaned],   ["", |<jnthn liz nine nwc timo vrurg>],
-  'are the cleaned strings ok';
 
 is-deeply
   $sc.Map,
@@ -37,19 +31,6 @@ is-deeply
     vrurg => 'purple'
   )),
   'did the mapping go ok';
-
-is-deeply
-  $sc.Map(-> $s, $c { "<color $c> $s </color>" }),
-  Map.new((
-    ""    => "",
-    jnthn => '<color blue> jnthn </color>',
-    liz   => '<color red> liz </color>',
-    nine  => '<color orange> nine </color>',
-    nwc10 => '<color yellow> nwc10 </color>',
-    timo  => '<color green> timo </color>',
-    vrurg => '<color purple> vrurg </color>'
-  )),
-  'did the explicit mapping go ok';
 
 $sc := String::Color.new:
   generator => -> str $string { "foo" },
@@ -75,9 +56,7 @@ is-deeply
   )),
   'did the mapping go ok';
 
-is-deeply [$sc.add( <moritz masak nine> )], [moritz => "foo", masak => "foo"],
-  'does add return the ones really added';
-
+$sc.add( <moritz masak nine> );
 is-deeply
   $sc.Map,
   Map.new((
