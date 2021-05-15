@@ -1,5 +1,6 @@
 use v6.*;
 
+use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
 use OO::Monitors;
 
 # Default string cleaner logic.
@@ -14,43 +15,67 @@ sub clean(Str:D $string) {
     }).join
 }
 
-monitor String::Color:ver<0.0.6>:auth<cpan:ELIZABETH> {
+monitor String::Color:ver<0.0.7>:auth<cpan:ELIZABETH> {
     has &.generator is required;
     has &.cleaner is built(:bind) = &clean;
     has %!string2color;
     has %!clean2color;
 
     multi method TWEAK(--> Nil) {
-        %!string2color{""} := %!clean2color{""} := "";
+        %!string2color{""} := "";
+        %!clean2color{""}  := "" => (my str @ = "");
     }
     multi method TWEAK(:%colors! --> Nil) {
         %!string2color := %colors;
-        %!string2color{""} := %!clean2color{""} := "";
+        %!string2color{""} := "";
+        %!clean2color{""}  := "" => (my str @ = "");
+
         for %colors.kv -> $string, $color {
-            %!clean2color{&!cleaner($string)} := $color;
-        }
-    }
-
-    # Return the color for a cleaned string.  If there is
-    # no color yet, create one with the generator.
-    method !color-for-cleaned(Str:D $cleaned) {
-        %!clean2color{$cleaned} // &!generator($cleaned)
-    }
-
-    # Add the given strings if they're not known yet
-    method add(String::Color:D: @strings --> Nil) {
-        for @strings -> $string {
-            without %!string2color{$string} {
-                my $cleaned := &!cleaner($string);
-                %!string2color{$string} :=
-                  %!clean2color{$cleaned} :=
-                    self!color-for-cleaned($cleaned);
+            my $cleaned := &!cleaner($string);
+            with %!clean2color{$cleaned} {
+                inserts .value, $string;
+            }
+            else {
+                %!clean2color{$cleaned} := $color => (my str @ = $string);
             }
         }
     }
 
+    # Add the given strings if they're not known yet
+    method add(String::Color:D: @strings) {
+        my str @added;
+        for @strings -> $string {
+            without %!string2color{$string} {
+                @added.push($string);
+                my $cleaned := &!cleaner($string);
+
+                # Already have a color
+                with %!clean2color{$cleaned} {
+                    %!string2color{$string} := .key;
+                    inserts %!clean2color{$cleaned}.value, $string;
+                }
+
+                # No color yet
+                else {
+                    my $color :=
+                      %!string2color{$string} := &!generator($cleaned);
+                    %!clean2color{$cleaned} := $color => (my str @ = $string)
+                }
+            }
+        }
+        @added
+    }
+
+    method aliases(String::Color:D: Str:D $string) {
+        with %!clean2color{&!cleaner($string)} {
+            .value
+        }
+        else {
+            Nil
+        }
+    }
     method known(String::Color:D: Str:D $color --> Bool:D) {
-        $color (elem) %!string2color.values
+        $color ∈ %!string2color.values
     }
 
     method color(String::Color:D: Str:D $string) {
@@ -87,7 +112,7 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-$sc.add(@nicks);                # add mapping for strings in @nicks
+my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
 
 my %colors := $sc.Map;          # set up Map with color mappings so far
 
@@ -173,12 +198,25 @@ C<Callable>).  It B<must> be specified.
 
 =begin code :lang<raku>
 
-$sc.add(@strings);
+my @added = $sc.add(@strings);
 
 =end code
 
 The C<add> instance method allows adding of strings to the colors mapping.
-It takes a list of strings as the positional argument.
+It takes a list of strings as the positional argument.  It returns a list
+of strings that were actually added (in the order they were added).
+
+=head2 aliases
+
+=begin code :lang<raku>
+
+my @aliases = $sc.aliases($string);
+
+=end code
+
+The C<aliases> instance method returns a sorted list of strings that are
+considered aliases of the given string, because they share the same cleaned
+string.
 
 =head2 cleaned
 

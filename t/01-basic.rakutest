@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 7;
+plan 11;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -13,11 +13,12 @@ my $sc := String::Color.new:
   }
 
 isa-ok $sc, String::Color;
-$sc.add: <liz timo jnthn nine nwc10 vrurg>;
+my str @to-add = <liz_ liz timo jnthn nine nwc10 vrurg>;
+is-deeply $sc.add(@to-add), @to-add, 'were they all added';
 
 ok $sc.known("red"), "is 'red' a known color";
 nok $sc.known("cyan"), "is 'cyan' a NOT known color";
-is $sc.elems, 7, 'is number of elements ok';
+is $sc.elems, 8, 'is number of elements ok';
 
 is-deeply
   $sc.Map,
@@ -25,6 +26,7 @@ is-deeply
     ""    => "",
     jnthn => 'blue',
     liz   => 'red',
+    liz_  => 'red',
     nine  => 'orange',
     nwc10 => 'yellow',
     timo  => 'green',
@@ -37,6 +39,7 @@ $sc := String::Color.new:
   colors => {
     jnthn => 'blue',
     liz   => 'red',
+    liz_  => 'red',
     nine  => 'orange',
     nwc10 => 'yellow',
     timo  => 'green',
@@ -49,20 +52,29 @@ is-deeply
     ""    => "",
     jnthn => 'blue',
     liz   => 'red',
+    liz_  => 'red',
     nine  => 'orange',
     nwc10 => 'yellow',
     timo  => 'green',
     vrurg => 'purple'
   )),
-  'did the mapping go ok';
+  'did the mapping go ok from saved';
 
-$sc.add( <moritz masak nine> );
+my str @aliases = <liz liz_>;;
+for @aliases {
+    is-deeply $sc.aliases($_), @aliases, "right aliases for $_";
+}
+
+is-deeply $sc.add(<moritz masak nine>), (my str @ = <moritz masak>),
+  'did nine not get added again';
+
 is-deeply
   $sc.Map,
   Map.new((
     ""     => "",
     jnthn  => 'blue',
     liz    => 'red',
+    liz_   => 'red',
     masak  => 'foo',
     moritz => 'foo',
     nine   => 'orange',

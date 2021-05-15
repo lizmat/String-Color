@@ -18,7 +18,7 @@ my $sc = String::Color.new(
   colors    => %colors-so-far,  # optionally start with given set
 );
 
-$sc.add(@nicks);                # add mapping for strings in @nicks
+my @added = $sc.add(@nicks);    # add mapping for strings in @nicks
 
 my %colors := $sc.Map;          # set up Map with color mappings so far
 
@@ -82,10 +82,19 @@ add
 ---
 
 ```raku
-$sc.add(@strings);
+my @added = $sc.add(@strings);
 ```
 
-The `add` instance method allows adding of strings to the colors mapping. It takes a list of strings as the positional argument.
+The `add` instance method allows adding of strings to the colors mapping. It takes a list of strings as the positional argument. It returns a list of strings that were actually added (in the order they were added).
+
+aliases
+-------
+
+```raku
+my @aliases = $sc.aliases($string);
+```
+
+The `aliases` instance method returns a sorted list of strings that are considered aliases of the given string, because they share the same cleaned string.
 
 cleaned
 -------

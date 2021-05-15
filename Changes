@@ -2,20 +2,28 @@ Revision history for String-Color
 
 {{$NEXT}}
 
+0.0.7  2021-05-15T19:46:41+02:00
+    - Added dependency to Array::Sorted::Util back: we need "inserts"
+    - Reorganize %!clean2color internals.  Instead of just the color, it
+      now consists of a Pair with the color as key, and a native str array
+      with all the strings that share the same cleaned key.
+    - Add .aliases method to return all the aliases of a string
+    - Method .add now returns the strings that have been added again
+
 0.0.6  2021-05-09T11:50:48+02:00
     - Simplify further, just use hashes
     - Rely on OO::Monitors to limit multi-thread access to hashes
     - Drop dependeny on Array::Sorted::Util, no longer needed
-    - Methods strings/colors/cleaned no longer return sorted
+    - Methods .strings/.colors/.cleaned no longer return sorted
     - Remove mapper functionality on .Map
 
 0.0.5  2021-05-08T15:00:29+02:00
     - Simplify interface, make the module based on cleaned strings
     - Remove .keys|values methods, should no longer be considered Associative
     - Add .strings|colors|cleaned methods
-    - Add "cleaner" optional named argument to "new"
-    - Remove "matcher" functionality from "add": its function has been
-      basically superseded by the "cleaner" functionality
+    - Add :cleaner to "new"
+    - Remove :matcher functionality from .add: its function has been
+      basically superseded by the :cleaner functionality
 
 0.0.4  2021-05-07T15:30:49+02:00
     - Make .add return string => color pairs
