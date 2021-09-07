@@ -1,12 +1,12 @@
 {
-  "auth": "cpan:ELIZABETH",
+  "auth": "zef:lizmat",
   "authors": [
     "Elizabeth Mattijsen"
   ],
   "build-depends": [
   ],
   "depends": [
-    "Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>",
+    "Array::Sorted::Util:ver<0.0.7>:auth<zef:lizmat>",
     "OO::Monitors"
   ],
   "description": "map strings to a color code",
@@ -23,5 +23,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.7"
+  "version": "0.0.8"
 }

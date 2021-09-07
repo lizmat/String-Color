@@ -156,7 +156,7 @@ The `strings` instance method returns the strings.
 AUTHOR
 ======
 
-Elizabeth Mattijsen <liz@wenzperl.nl>
+Elizabeth Mattijsen <liz@raku.rocks>
 
 Source can be located at: https://github.com/lizmat/String-Color . Comments and Pull Requests are welcome.
 

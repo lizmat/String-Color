@@ -1,6 +1,6 @@
 use v6.*;
 
-use Array::Sorted::Util:ver<0.0.6>:auth<cpan:ELIZABETH>;
+use Array::Sorted::Util:ver<0.0.7>:auth<zef:lizmat>;
 use OO::Monitors;
 
 # Default string cleaner logic.
@@ -15,7 +15,7 @@ sub clean(Str:D $string) {
     }).join
 }
 
-monitor String::Color:ver<0.0.7>:auth<cpan:ELIZABETH> {
+monitor String::Color:ver<0.0.8>:auth<zef:lizmat> {
     has &.generator is required;
     has &.cleaner is built(:bind) = &clean;
     has %!string2color;
@@ -288,7 +288,7 @@ The C<strings> instance method returns the strings.
 
 =head1 AUTHOR
 
-Elizabeth Mattijsen <liz@wenzperl.nl>
+Elizabeth Mattijsen <liz@raku.rocks>
 
 Source can be located at: https://github.com/lizmat/String-Color . Comments and
 Pull Requests are welcome.
