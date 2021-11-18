@@ -1,7 +1,4 @@
-use v6.*;
-
-use Array::Sorted::Util:ver<0.0.7>:auth<zef:lizmat>;
-use OO::Monitors;
+use Array::Sorted::Util:ver<0.0.8>:auth<zef:lizmat>;
 
 # Default string cleaner logic.
 sub clean(Str:D $string) {
@@ -15,15 +12,17 @@ sub clean(Str:D $string) {
     }).join
 }
 
-monitor String::Color:ver<0.0.8>:auth<zef:lizmat> {
+class String::Color:ver<0.0.9>:auth<zef:lizmat> {
     has &.generator is required;
     has &.cleaner is built(:bind) = &clean;
     has %!string2color;
     has %!clean2color;
+    has $!lock;
 
     multi method TWEAK(--> Nil) {
         %!string2color{""} := "";
         %!clean2color{""}  := "" => (my str @ = "");
+        $!lock := Lock.new;
     }
     multi method TWEAK(:%colors! --> Nil) {
         %!string2color := %colors;
@@ -39,27 +38,30 @@ monitor String::Color:ver<0.0.8>:auth<zef:lizmat> {
                 %!clean2color{$cleaned} := $color => (my str @ = $string);
             }
         }
+        $!lock := Lock.new;
     }
 
     # Add the given strings if they're not known yet
-    method add(String::Color:D: @strings) {
+    method add(String::Color:D: \strings) {
         my str @added;
-        for @strings -> $string {
-            without %!string2color{$string} {
-                @added.push($string);
-                my $cleaned := &!cleaner($string);
+        $!lock.protect: {
+            for strings.list -> $string {
+                without %!string2color{$string} {
+                    @added.push($string);
+                    my $cleaned := &!cleaner($string);
 
-                # Already have a color
-                with %!clean2color{$cleaned} {
-                    %!string2color{$string} := .key;
-                    inserts %!clean2color{$cleaned}.value, $string;
-                }
+                    # Already have a color
+                    with %!clean2color{$cleaned} {
+                        %!string2color{$string} := .key;
+                        inserts %!clean2color{$cleaned}.value, $string;
+                    }
 
-                # No color yet
-                else {
-                    my $color :=
-                      %!string2color{$string} := &!generator($cleaned);
-                    %!clean2color{$cleaned} := $color => (my str @ = $string)
+                    # No color yet
+                    else {
+                        my $color :=
+                          %!string2color{$string} := &!generator($cleaned);
+                        %!clean2color{$cleaned} := $color => (my str @ = $string)
+                    }
                 }
             }
         }
@@ -67,30 +69,41 @@ monitor String::Color:ver<0.0.8>:auth<zef:lizmat> {
     }
 
     method aliases(String::Color:D: Str:D $string) {
-        with %!clean2color{&!cleaner($string)} {
-            .value
-        }
-        else {
-            Nil
+        my str $key = &!cleaner($string);
+        $!lock.protect: {
+            with %!clean2color{$key} {
+                .value
+            }
+            else {
+                Nil
+            }
         }
     }
     method known(String::Color:D: Str:D $color --> Bool:D) {
-        $color ∈ %!string2color.values
+        $!lock.protect: { $color ∈ %!string2color.values }
     }
 
     method color(String::Color:D: Str:D $string) {
-        %!string2color{$string} // Nil
+        $!lock.protect: { %!string2color{$string} // Nil }
     }
 
     method Map(String::Color:D: --> Map:D) {
-        %!string2color.Map
+        $!lock.protect: { %!string2color.Map }
     }
 
-    method elems(String::Color:D:) { %!string2color.elems }
+    method elems(String::Color:D:) {
+        $!lock.protect: { %!string2color.elems }
+    }
 
-    method strings(String::Color:D:) { %!string2color.keys   }
-    method colors( String::Color:D:) { %!string2color.values }
-    method cleaned(String::Color:D:) { %!clean2color.keys    }
+    method strings(String::Color:D:) {
+        $!lock.protect: { %!string2color.keys }
+    }
+    method colors( String::Color:D:) {
+        $!lock.protect: { %!string2color.values }
+    }
+    method cleaned(String::Color:D:) {
+        $!lock.protect: { %!clean2color.keys }
+    }
 }
 
 =begin pod

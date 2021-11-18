@@ -6,8 +6,7 @@
   "build-depends": [
   ],
   "depends": [
-    "Array::Sorted::Util:ver<0.0.7>:auth<zef:lizmat>",
-    "OO::Monitors"
+    "Array::Sorted::Util:ver<0.0.8>:auth<zef:lizmat>"
   ],
   "description": "map strings to a color code",
   "license": "Artistic-2.0",
@@ -23,5 +22,5 @@
   ],
   "test-depends": [
   ],
-  "version": "0.0.8"
+  "version": "0.0.9"
 }

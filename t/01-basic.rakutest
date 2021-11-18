@@ -1,7 +1,7 @@
 use Test;
 use String::Color;
 
-plan 11;
+plan 12;
 
 my str @colors = <green blue orange yellow purple>;
 
@@ -65,8 +65,10 @@ for @aliases {
     is-deeply $sc.aliases($_), @aliases, "right aliases for $_";
 }
 
-is-deeply $sc.add(<moritz masak nine>), (my str @ = <moritz masak>),
-  'did nine not get added again';
+is-deeply $sc.add("masak"), (my str @ = <masak>),
+  'could we add masak just by themselves';
+is-deeply $sc.add(<moritz masak nine>), (my str @ = <moritz>),
+  'did nine and masak not get added again';
 
 is-deeply
   $sc.Map,

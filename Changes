@@ -2,9 +2,14 @@ Revision history for String-Color
 
 {{$NEXT}}
 
+0.0.9  2021-11-18T13:36:59+01:00
+    - Up dependencies
+    - Remove dependency on OO::Monitors
+    - Allow .add to take a single string
+
 0.0.8  2021-09-08T00:52:52+02:00
     - Move to the zef ecosystem
-    - Update emaiol address
+    - Update email address
 
 0.0.7  2021-05-15T19:46:41+02:00
     - Added dependency to Array::Sorted::Util back: we need "inserts"
