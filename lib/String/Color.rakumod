@@ -12,7 +12,7 @@ sub clean(Str:D $string) {
     }).join
 }
 
-class String::Color:ver<0.0.9>:auth<zef:lizmat> {
+class String::Color:ver<0.0.10>:auth<zef:lizmat> {
     has &.generator is required;
     has &.cleaner is built(:bind) = &clean;
     has %!string2color;
