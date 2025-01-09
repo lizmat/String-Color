@@ -1,6 +1,8 @@
 Revision history for String-Color
 
 {{$NEXT}}
+
+0.0.11  2025-01-09T16:29:09+01:00
     - Up dependency on Array::Sorted::Util
     - Update copyright year
 

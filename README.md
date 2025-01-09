@@ -10,7 +10,7 @@ SYNOPSIS
 
 ```raku
 use String::Color;
-use Randomcolor;                # some module for randomly generating colors
+use Randomcolor;  # some module for randomly generating colors
 
 my $sc = String::Color.new(
   generator => { Randomcolor.new.list.head },
